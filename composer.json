@@ -56,6 +56,11 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "start": [
+            "cd laradock-mls/ && docker-compose up -d nginx postgres adminer"
+        ],
+        "workspace": "cd laradock-mls/ && docker-compose exec workspace bash",
+        "stop": "cd laradock-mls/ && docker-compose stop"
     }
 }

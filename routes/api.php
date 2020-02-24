@@ -16,3 +16,15 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::prefix('v1')->group(function () {
+    Route::get('properties',  ['uses' => 'MlsListingController@showAllListings']);
+
+    Route::get('properties/{id}', ['uses' => 'MlsListingController@showOneListing']);
+
+    Route::post('properties', ['uses' => 'MlsListingController@create']);
+
+    Route::delete('properties/{id}', ['uses' => 'MlsListingController@delete']);
+
+    Route::put('properties/{id}', ['uses' => 'MlsListingController@update']);
+});
