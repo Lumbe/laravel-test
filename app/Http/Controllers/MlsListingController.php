@@ -9,7 +9,7 @@ class MlsListingController extends Controller {
 
     public function showAllListings()
     {
-        return response()->json(RebMlsListing::all()->limit(20));
+        return response()->json(RebMlsListing::limit(20)->get());
     }
 
     public function showOneListing($id)
