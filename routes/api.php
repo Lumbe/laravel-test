@@ -18,13 +18,14 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::prefix('v1')->group(function () {
-    Route::get('properties',  ['uses' => 'MlsListingController@showAllListings']);
 
-    Route::get('properties/{id}', ['uses' => 'MlsListingController@showOneListing']);
+    Route::get('locations',  ['uses' => 'LocationController@index']);
 
-    Route::post('properties', ['uses' => 'MlsListingController@create']);
-
-    Route::delete('properties/{id}', ['uses' => 'MlsListingController@delete']);
-
-    Route::put('properties/{id}', ['uses' => 'MlsListingController@update']);
+    // Route::get('locations/{id}', ['uses' => 'LocationController@show']);
+    //
+    // Route::post('locations', ['uses' => 'LocationController@create']);
+    //
+    // Route::delete('locations/{id}', ['uses' => 'LocationController@delete']);
+    //
+    // Route::put('locations/{id}', ['uses' => 'LocationController@update']);
 });
