@@ -1,17 +1,19 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Location extends Model {
 
-    private $db = null;
+    // private $db = null;
+    //
+    // public function __construct($db)
+    // {
+    //     $this->db = $db;
+    // }
 
-    public function __construct($db)
-    {
-        $this->db = $db;
-    }
-
-    function get_states( $args = array() ) {
+    public static function get_states( $args = array() ) {
 
         $check = false;
         $params = array();
@@ -84,9 +86,11 @@ class Location extends Model {
         $sql .= $where . $order . $limit;
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
@@ -94,7 +98,7 @@ class Location extends Model {
 
     }
 
-    function get_counties( $args = array() ) {
+    public static function get_counties( $args = array() ) {
 
         $check = false;
         $params = array();
@@ -184,9 +188,12 @@ class Location extends Model {
         $sql .= $where . $order . $limit;
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+
+
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
@@ -194,7 +201,7 @@ class Location extends Model {
 
     }
 
-    function get_cities( $args = array() ) {
+    public static function get_cities( $args = array() ) {
 
         $check = false;
         $params = array();
@@ -288,16 +295,23 @@ class Location extends Model {
         $sql .= $where . $order . $limit;
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // return $result;
+            Log::info($sql);
+            Log::info($params);
+            Log::info(DB::raw($sql), $params);
+            // Log::info("По id ищет, а по строке не ищет...");
+
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    function get_neighborhoods( $args = array() ) {
+    public static function get_neighborhoods( $args = array() ) {
 
         global $wpdb;
         $check = false;
@@ -376,16 +390,18 @@ class Location extends Model {
         $sql .= $where . $order . $limit;
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // return $result;
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    function get_postal( $args = array() ) {
+    public static function get_postal( $args = array() ) {
         $params = array();
         $fields = '';
         $check = false;
@@ -433,9 +449,9 @@ class Location extends Model {
 
         if ( !empty($args['postal_%']) ) {
             // $where .= ($check ? " AND" : " WHERE") . " sorce.postal_code LIKE ?";
-            $where .= ($check ? " AND" : " WHERE") . " MATCH (sorce.postal_code) AGAINST (? IN BOOLEAN MODE)";
-            $params[] = trim( $args['postal_%'] ).'*';
-            // $params[] = trim( $args['postal_%'] )."%";
+            $where .= ($check ? " AND" : " WHERE") . " sorce.postal_code LIKE ?";
+            // $params[] = trim( $args['postal_%'] ).'*';
+            $params[] = trim( $args['postal_%'] )."%";
             $check = true;
         }
 
@@ -490,128 +506,136 @@ class Location extends Model {
         $sql .= $where . $order . $limit;
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // return $result;
+            Log::info($sql);
+            Log::info($params);
+            Log::info(DB::raw($sql), $params);
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    function find_locartions( $query ) {
+    public static function find_locartions( $query ) {
         $params = array();
 
         //state
         $sql = "(";
-        $sql .= "SELECT state_id, state_name, state_abr, NULL as 'county_id', NULL as 'county_name', NULL as 'city_id', NULL as 'city_name'
+        $sql .= "SELECT state_id, state_name, state_abr, NULL::integer as county_id, NULL::character as county_name, NULL::integer as city_id, NULL::character as city_name
             FROM states
-            WHERE MATCH (state_name) AGAINST (? IN BOOLEAN MODE) AND state_name LIKE ?
+            WHERE state_name LIKE ?
             LIMIT 3";
-            $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+            // $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+            // $params[] = trim( $query ).'.*';
             $params[] = trim( $query ).'%';
         $sql .= ")";
 
-        $sql .= " UNION ALL ";
+        $sql .= " UNION ALL";
 
         //county
         $sql .= " (";
-        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, NULL as 'city_id', NULL as 'city_name'
+        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, NULL::integer as city_id, NULL::character as city_name
             FROM counties sorce
             LEFT JOIN states key1 on key1.state_id = sorce.fk_state
-            WHERE MATCH (sorce.county_name) AGAINST (? IN BOOLEAN MODE) AND sorce.county_name LIKE ?
+            WHERE sorce.county_name ILIKE ?
             LIMIT 5";
-            $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+            // $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+            // $params[] = trim( $query ).'.*';
             $params[] = trim( $query ).'%';
         $sql .= ")";
 
-        $sql .= " UNION ALL ";
+        $sql .= " UNION ALL";
 
         //city
         $sql .= " (";
-        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, city_id, city_name
-            FROM cities sorce
-            LEFT JOIN states key1 on key1.state_id = sorce.fk_state
-            LEFT JOIN counties key2 on key2.county_id = sorce.fk_county
-            WHERE MATCH (sorce.city_name) AGAINST (? IN BOOLEAN MODE) AND sorce.city_name LIKE ?
-            LIMIT 5";
-            $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, city_id, city_name FROM cities sorce LEFT JOIN states key1 on key1.state_id = sorce.fk_state LEFT JOIN counties key2 on key2.county_id = sorce.fk_county WHERE sorce.city_name LIKE ? LIMIT 5";
+            // $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
+            // $params[] = trim( $query ).'.*';
             $params[] = trim( $query ).'%';
         $sql .= ")";
 
         try {
-            $sql = $this->db->prepare($sql);
-            $sql->execute( $params );
-            $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // $sql = $this->db->prepare($sql);
+            // $sql->execute( $params );
+            // $result = $sql->fetchAll(\PDO::FETCH_ASSOC);
+            // return $result;
+            Log::info($sql);
+            Log::info($params);
+            Log::info(DB::raw($sql), $params);
+            $result = DB::select( DB::raw($sql), $params);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
         }
     }
 
-    public function insert(Array $input)
-    {
-        $statement = "
-            INSERT INTO person
-                (firstname, lastname, firstparent_id, secondparent_id)
-            VALUES
-                (:firstname, :lastname, :firstparent_id, :secondparent_id);
-        ";
+    // public function insert(Array $input)
+    // {
+    //     $statement = "
+    //         INSERT INTO person
+    //             (firstname, lastname, firstparent_id, secondparent_id)
+    //         VALUES
+    //             (:firstname, :lastname, :firstparent_id, :secondparent_id);
+    //     ";
+    //
+    //     try {
+    //         $statement = $this->db->prepare($statement);
+    //         $statement->execute(array(
+    //             'firstname' => $input['firstname'],
+    //             'lastname'  => $input['lastname'],
+    //             'firstparent_id' => $input['firstparent_id'] ?? null,
+    //             'secondparent_id' => $input['secondparent_id'] ?? null,
+    //         ));
+    //         return $statement->rowCount();
+    //     } catch (\PDOException $e) {
+    //         exit($e->getMessage());
+    //     }
+    // }
 
-        try {
-            $statement = $this->db->prepare($statement);
-            $statement->execute(array(
-                'firstname' => $input['firstname'],
-                'lastname'  => $input['lastname'],
-                'firstparent_id' => $input['firstparent_id'] ?? null,
-                'secondparent_id' => $input['secondparent_id'] ?? null,
-            ));
-            return $statement->rowCount();
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }
-    }
+    // public function update($id, Array $input)
+    // {
+    //     $statement = "
+    //         UPDATE person
+    //         SET
+    //             firstname = :firstname,
+    //             lastname  = :lastname,
+    //             firstparent_id = :firstparent_id,
+    //             secondparent_id = :secondparent_id
+    //         WHERE id = :id;
+    //     ";
+    //
+    //     try {
+    //         $statement = $this->db->prepare($statement);
+    //         $statement->execute(array(
+    //             'id' => (int) $id,
+    //             'firstname' => $input['firstname'],
+    //             'lastname'  => $input['lastname'],
+    //             'firstparent_id' => $input['firstparent_id'] ?? null,
+    //             'secondparent_id' => $input['secondparent_id'] ?? null,
+    //         ));
+    //         return $statement->rowCount();
+    //     } catch (\PDOException $e) {
+    //         exit($e->getMessage());
+    //     }
+    // }
 
-    public function update($id, Array $input)
-    {
-        $statement = "
-            UPDATE person
-            SET
-                firstname = :firstname,
-                lastname  = :lastname,
-                firstparent_id = :firstparent_id,
-                secondparent_id = :secondparent_id
-            WHERE id = :id;
-        ";
-
-        try {
-            $statement = $this->db->prepare($statement);
-            $statement->execute(array(
-                'id' => (int) $id,
-                'firstname' => $input['firstname'],
-                'lastname'  => $input['lastname'],
-                'firstparent_id' => $input['firstparent_id'] ?? null,
-                'secondparent_id' => $input['secondparent_id'] ?? null,
-            ));
-            return $statement->rowCount();
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }
-    }
-
-    public function delete($id)
-    {
-        $statement = "
-            DELETE FROM person
-            WHERE id = :id;
-        ";
-
-        try {
-            $statement = $this->db->prepare($statement);
-            $statement->execute(array('id' => $id));
-            return $statement->rowCount();
-        } catch (\PDOException $e) {
-            exit($e->getMessage());
-        }
-    }
+    // public function delete($id)
+    // {
+    //     $statement = "
+    //         DELETE FROM person
+    //         WHERE id = :id;
+    //     ";
+    //
+    //     try {
+    //         $statement = $this->db->prepare($statement);
+    //         $statement->execute(array('id' => $id));
+    //         return $statement->rowCount();
+    //     } catch (\PDOException $e) {
+    //         exit($e->getMessage());
+    //     }
+    // }
 }

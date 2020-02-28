@@ -3,23 +3,41 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LocationController extends Controller {
 
-    private $db;
-    private $requestMethod;
-    private $args;
-
-    private $locationGateway;
-
-    public function __construct($db, $requestMethod, $args)
+    public function index(Request $request)
     {
-        $this->db = $db;
-        $this->requestMethod = $requestMethod;
-        $this->args = $args;
+        // Log::info($request->input('action'));
+        // return response()->json('success?!');
+        // return response()->json(Location::get_states($request->all()));
+        // return response()->json($request);
 
-        $this->locationGateway = new LocationGateway($db);
+        if ( $request->has('action') && $request->input('action') == 'autocomplete' ) {
+            $response = $this->autocomplete( $request->input('query') );
+        } else {
+            $response = $this->getLocation( $request->all() );
+        }
+
+        return $response;
+
     }
+
+    // private $db;
+    // private $requestMethod;
+    // private $args;
+    //
+    // private $locationGateway;
+    //
+    // public function __construct($db, $requestMethod, $args)
+    // {
+    //     $this->db = $db;
+    //     $this->requestMethod = $requestMethod;
+    //     $this->args = $args;
+    //
+    //     $this->locationGateway = new LocationGateway($db);
+    // }
 
     public function processRequest()
     {
@@ -53,27 +71,30 @@ class LocationController extends Controller {
     private function getLocation($args) {
         switch ($args['type']) {
             case 'state':
-                $result = $this->locationGateway->get_states($args);
+                $result = Location::get_states($args);
                 break;
             case 'county':
-                $result = $this->locationGateway->get_counties($args);
+                $result = Location::get_counties($args);
                 break;
             case 'city':
-                $result = $this->locationGateway->get_cities($args);
+                $result = Location::get_cities($args);
                 break;
             case 'neighborhood':
-                $result = $this->locationGateway->get_neighborhoods($args);
+                $result = Location::get_neighborhoods($args);
                 break;
             case 'postal':
-                $result = $this->locationGateway->get_postal($args);
+                $result = Location::get_postal($args);
+                break;
+            default:
+                $result = 'Nothing found';
                 break;
         }
-        if (!$result) {
-            return $this->notFoundResponse();
-        }
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        // if (!$result) {
+        //     return $this->notFoundResponse();
+        // }
+        // $response['status_code_header'] = 'HTTP/1.1 200 OK';
+        // $response['body'] = json_encode($result);
+        return $result;
     }
 
     private function autocomplete($query) {
@@ -82,9 +103,10 @@ class LocationController extends Controller {
 
         if( is_numeric($query) ) {
 
-            $postal_codes = $this->locationGateway->get_postal( array( 'fields' => 'postal_id,postal_code,state_id,state_abr,city_id,city_name,county_id', 'postal_%' => trim($query), 'per_page' => 10, 'paged' => 1 ));
+            $postal_codes = Location::get_postal( array( 'fields' => 'postal_id,postal_code,state_id,state_abr,city_id,city_name,county_id', 'postal_%' => trim($query), 'per_page' => 10, 'paged' => 1 ));
             if( !empty($postal_codes) ) {
                 foreach( $postal_codes as $postal) {
+                    $postal = (array)$postal;
                     $locations[] = array(
                         'value' => $postal['postal_code'] .' '. $postal['city_name'] .', '. $postal['state_abr'],
                         'data' => [ 'category' => 'postal codes', 'postal_id' => $postal['postal_id'], 'city_id' => $postal['city_id'], 'county_id' => $postal['county_id'], 'state_id' => $postal['state_id'] ] //'coordinates' => $postal['geojson']
@@ -93,10 +115,10 @@ class LocationController extends Controller {
             }
 
         } else {
-
-            $results = $this->locationGateway->find_locartions($query);
+            $results = Location::find_locartions($query);
             if( !empty($results) ) {
                 foreach ( $results as $result ) {
+                    $result = (array)$result;
                     if ($result['city_id']) {
                         $locations[] = array(
                             'value' => $result['city_name'] .', '. $result['state_abr'],
@@ -123,12 +145,12 @@ class LocationController extends Controller {
         );
         $result['success'] = 1;
 
-        if (!$result) {
-            return $this->notFoundResponse();
-        }
-        $response['status_code_header'] = 'HTTP/1.1 200 OK';
-        $response['body'] = json_encode($result);
-        return $response;
+        // if (!$result) {
+        //     return $this->notFoundResponse();
+        // }
+        // $response['status_code_header'] = 'HTTP/1.1 200 OK';
+        // $response['body'] = json_encode($result);
+        return $result;
     }
 
     private function createLocationFromRequest()
