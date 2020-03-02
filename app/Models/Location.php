@@ -527,7 +527,7 @@ class Location extends Model {
         $sql = "(";
         $sql .= "SELECT state_id, state_name, state_abr, NULL::integer as county_id, NULL::character as county_name, NULL::integer as city_id, NULL::character as city_name
             FROM states
-            WHERE state_name LIKE ?
+            WHERE state_name ILIKE ?
             LIMIT 3";
             // $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
             // $params[] = trim( $query ).'.*';
@@ -552,7 +552,7 @@ class Location extends Model {
 
         //city
         $sql .= " (";
-        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, city_id, city_name FROM cities sorce LEFT JOIN states key1 on key1.state_id = sorce.fk_state LEFT JOIN counties key2 on key2.county_id = sorce.fk_county WHERE sorce.city_name LIKE ? LIMIT 5";
+        $sql .= "SELECT state_id, state_name, state_abr, county_id, county_name, city_id, city_name FROM cities sorce LEFT JOIN states key1 on key1.state_id = sorce.fk_state LEFT JOIN counties key2 on key2.county_id = sorce.fk_county WHERE sorce.city_name ILIKE ? LIMIT 5";
             // $params[] = '+'.str_replace(' ', ' +', trim( $query )).'*';
             // $params[] = trim( $query ).'.*';
             $params[] = trim( $query ).'%';
